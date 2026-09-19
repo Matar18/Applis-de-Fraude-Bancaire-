@@ -2,6 +2,8 @@
 
 Application web de **détection de fraude bancaire** combinant un modèle de machine learning et une interface Django. Chaque transaction saisie est analysée en temps réel pour estimer sa probabilité d'être frauduleuse.
 
+🌐 **Démo en ligne** : [applis-de-fraude-bancaire.onrender.com](https://applis-de-fraude-bancaire.onrender.com) (mode démo — voir [Déploiement](#déploiement))
+
 ## Pourquoi ce projet
 
 Avec l'essor des paiements numériques, les banques doivent identifier les transactions suspectes rapidement, sans pénaliser les clients légitimes. BankSafe illustre comment intégrer un modèle de machine learning entraîné (scikit-learn) dans une vraie application web exploitable — au-delà d'un simple notebook — avec une interface d'analyse, un historique consultable et un dashboard de suivi.
@@ -48,6 +50,35 @@ python manage.py runserver
 
 L'application est ensuite accessible sur http://127.0.0.1:8000/ (ou un autre port via `python manage.py runserver 127.0.0.1:8001`).
 
+## Déploiement
+
+L'application est hébergée sur [Render](https://render.com) (plan gratuit) depuis ce dépôt GitHub, avec déploiement automatique à chaque push sur `main`.
+
+**Configuration du service Render :**
+
+| Paramètre | Valeur |
+|---|---|
+| Root Directory | `APP_Fraud` |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `python manage.py migrate --noinput && gunicorn APP_Fraud.wsgi` |
+
+> La migration est relancée à **chaque démarrage** (pas seulement au build) car le plan gratuit Render utilise un disque éphémère : la base SQLite est réinitialisée à chaque redémarrage du conteneur.
+
+**Variables d'environnement :**
+
+| Variable | Valeur | Rôle |
+|---|---|---|
+| `SECRET_KEY` | générée aléatoirement | Clé secrète Django, ne jamais utiliser celle par défaut en production |
+| `DEBUG` | `False` | Désactive les pages d'erreur détaillées |
+| `ALLOWED_HOSTS` | `*` (ou le domaine exact) | Domaines autorisés à servir l'application |
+| `DEMO_MODE` | `True` | Voir ci-dessous |
+
+**Mode démo (`DEMO_MODE=True`)** : sur la démo publique, chaque transaction soumise est bien analysée par le modèle et le résultat affiché en direct, mais **rien n'est enregistré en base** (voir `detector/views.py`). Les visiteurs peuvent donc tester l'outil sans jamais pouvoir modifier ou supprimer l'historique et le dashboard partagés — ils restent en consultation seule. Un bandeau dans l'interface prévient l'utilisateur de ce comportement.
+
+**Limitations connues de l'hébergement gratuit :**
+- **Mise en veille** : l'instance se met en pause après une période d'inactivité ; la première requête suivante peut prendre jusqu'à ~50 secondes le temps qu'elle redémarre.
+- **Disque éphémère** : aucune donnée n'est conservée entre deux redémarrages (cohérent avec le mode démo, sans impact puisque rien n'est censé y être enregistré durablement).
+
 ## Modèle de machine learning
 
 Le pipeline est chargé une seule fois au démarrage (`detector/views.py`) depuis `ml_model/fraud_model.pkl` et prend en entrée 6 variables :
@@ -63,5 +94,5 @@ Le pipeline est chargé une seule fois au démarrage (`detector/views.py`) depui
 
 ## Limites connues
 
-- Base de données SQLite : adaptée au développement, pas à la production.
-- Pas d'authentification : toutes les pages sont publiques en l'état.
+- Base de données SQLite : adaptée au développement et à une démo, pas à un usage bancaire réel à volume.
+- Pas d'authentification : toutes les pages sont publiques en l'état (acceptable pour une démo en `DEMO_MODE`, à revoir avant tout usage avec de vraies données).
