@@ -1,0 +1,144 @@
+{% extends "detector/base.html" %}
+
+{% block title %}Nouvelle Transaction{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-7">
+
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0">
+                        💳 Analyse d'une Transaction
+                    </h3>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <!-- Montant -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-cash-coin text-success"></i> {{ form.montant.label }}
+                                </label>
+                                {{ form.montant }}
+                                <div class="text-danger small">
+                                    {{ form.montant.errors }}
+                                </div>
+                            </div>
+
+                            <!-- Heure -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-clock text-success"></i> {{ form.heure.label }}
+                                </label>
+                                {{ form.heure }}
+                                <div class="text-danger small">
+                                    {{ form.heure.errors }}
+                                </div>
+                            </div>
+
+                            <!-- Nombre de transactions -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-arrow-repeat text-success"></i> {{ form.nb_transactions_24h.label }}
+                                </label>
+                                {{ form.nb_transactions_24h }}
+                                <div class="text-danger small">
+                                    {{ form.nb_transactions_24h.errors }}
+                                </div>
+                            </div>
+
+                            <!-- Distance -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-geo-alt text-success"></i> {{ form.distance_domicile.label }}
+                                </label>
+                                {{ form.distance_domicile }}
+                                <div class="text-danger small">
+                                    {{ form.distance_domicile.errors }}
+                                </div>
+                            </div>
+
+                            <!-- Référence -->
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="bi bi-tag text-success"></i> {{ form.reference.label }}
+                                </label>
+                                {{ form.reference }}
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Cases à cocher -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch mb-0">
+                                        {{ form.pays_etranger }}
+                                        <label class="form-check-label" for="{{ form.pays_etranger.id_for_label }}">
+                                            <i class="bi bi-globe-europe-africa"></i> {{ form.pays_etranger.label }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch mb-0">
+                                        {{ form.nouvelle_carte }}
+                                        <label class="form-check-label" for="{{ form.nouvelle_carte.id_for_label }}">
+                                            <i class="bi bi-credit-card-2-front"></i> {{ form.nouvelle_carte.label }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg">
+                                🔍 Vérifier la transaction
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+            {% if result %}
+            <div class="card shadow-lg border-0 mt-4">
+                <div class="card-header bg-{{ result.badge }} text-white text-center">
+                    <h4 class="mb-0">
+                        {% if result.est_fraud %}
+                            🚨 Fraude détectée
+                        {% else %}
+                            ✅ Transaction légitime
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="mb-2">Référence : <strong>{{ result.transaction.reference|default:"—" }}</strong></p>
+                    <p class="mb-2">Niveau de risque : <span class="badge bg-{{ result.badge }}">{{ result.niveau_risque }}</span></p>
+                    <p class="mb-1">Probabilité de fraude : <strong>{{ result.probabilite_pct }}%</strong></p>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-{{ result.badge }} prob-bar" role="progressbar"
+                             style="width: {{ result.probabilite_pct }}%;"
+                             aria-valuenow="{{ result.probabilite_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <a href="{% url 'detector:history' %}" class="btn btn-outline-secondary btn-sm">Voir l'historique</a>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

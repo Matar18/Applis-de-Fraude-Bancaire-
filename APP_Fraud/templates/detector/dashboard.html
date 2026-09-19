@@ -1,0 +1,111 @@
+{% extends "detector/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">📊 Dashboard</h2>
+
+    {% if no_data %}
+        <div class="alert alert-info">
+            Aucune transaction analysée pour le moment. <a href="{% url 'detector:predict' %}">Analyser une transaction</a>.
+        </div>
+    {% else %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon" style="background:rgba(59,130,246,.15);color:#60A5FA;"><i class="bi bi-list-check"></i></div>
+                    <div class="stat-number" style="color:#E2E8F0;">{{ total_trans }}</div>
+                    <div class="stat-label">Transactions analysées</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon" style="background:rgba(248,113,113,.15);color:#F87171;"><i class="bi bi-shield-exclamation"></i></div>
+                    <div class="stat-number" style="color:#F87171;">{{ nb_fraudes }}</div>
+                    <div class="stat-label">Fraudes détectées</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon" style="background:rgba(34,197,94,.15);color:#4ADE80;"><i class="bi bi-shield-check"></i></div>
+                    <div class="stat-number" style="color:#4ADE80;">{{ nb_legitime }}</div>
+                    <div class="stat-label">Transactions légitimes</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon" style="background:rgba(245,158,11,.15);color:#FBBF24;"><i class="bi bi-percent"></i></div>
+                    <div class="stat-number" style="color:#FBBF24;">{{ taux_fraude }}%</div>
+                    <div class="stat-label">Taux de fraude</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Répartition des transactions</h5>
+                        <canvas id="repartitionChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Montant moyen par catégorie</h5>
+                        <canvas id="montantChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not no_data %}
+<script>
+Chart.defaults.color = '#94A3B8';
+Chart.defaults.borderColor = '#334155';
+
+new Chart(document.getElementById('repartitionChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Fraudes', 'Légitimes'],
+        datasets: [{
+            data: [{{ nb_fraudes }}, {{ nb_legitime }}],
+            backgroundColor: ['#F87171', '#4ADE80'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        plugins: { legend: { position: 'bottom', labels: { color: '#E2E8F0' } } },
+        cutout: '65%',
+    }
+});
+
+new Chart(document.getElementById('montantChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Fraudes', 'Légitimes'],
+        datasets: [{
+            label: 'Montant moyen',
+            data: [{{ moy_fraud|floatformat:2 }}, {{ moy_legitime|floatformat:2 }}],
+            backgroundColor: ['#F87171', '#4ADE80'],
+            borderRadius: 8,
+            maxBarThickness: 80,
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#334155' } },
+            x: { grid: { color: '#334155' } },
+        },
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
