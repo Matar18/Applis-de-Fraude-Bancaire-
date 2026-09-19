@@ -60,9 +60,9 @@ L'application est hébergée sur [Render](https://render.com) (plan gratuit) dep
 |---|---|
 | Root Directory | `APP_Fraud` |
 | Build Command | `pip install -r requirements.txt` |
-| Start Command | `python manage.py migrate --noinput && gunicorn APP_Fraud.wsgi` |
+| Start Command | `python manage.py migrate --noinput && python manage.py seed_transactions && gunicorn APP_Fraud.wsgi` |
 
-> La migration est relancée à **chaque démarrage** (pas seulement au build) car le plan gratuit Render utilise un disque éphémère : la base SQLite est réinitialisée à chaque redémarrage du conteneur.
+> La migration et le seed sont relancés à **chaque démarrage** (pas seulement au build) car le plan gratuit Render utilise un disque éphémère : la base SQLite est réinitialisée à chaque redémarrage du conteneur. `seed_transactions` (voir `detector/management/commands/`) recrée alors un jeu fixe de 6 transactions d'exemple (via `update_or_create` sur leur référence, donc sans doublons), pour que le dashboard et l'historique ne soient jamais vides après une remise en veille.
 
 **Variables d'environnement :**
 
