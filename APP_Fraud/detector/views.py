@@ -40,7 +40,8 @@ def predict_view(request):
         transaction=form.save(commit=False)
         transaction.est_fraud=est_fraud
         transaction.probabilite_fraude=probabilite_fraude
-        transaction.save()
+        if not settings.DEMO_MODE:
+            transaction.save()
 
         niveau, badge = transaction.get_niveau_risque()
 
@@ -55,6 +56,7 @@ def predict_view(request):
     return render(request, 'detector/predict.html', {
         'form':form,
         'result':result,
+        'demo_mode':settings.DEMO_MODE,
     })
 
 def history_views(request):

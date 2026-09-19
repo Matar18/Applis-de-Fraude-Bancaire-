@@ -1,4 +1,4 @@
-
+import os
 
 from pathlib import Path
 
@@ -10,12 +10,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@k9##_u-=%+58p&d4u@vnw=6$9+&dy$)omyjhofwi%yx6&)+q('
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-@k9##_u-=%+58p&d4u@vnw=6$9+&dy$)omyjhofwi%yx6&)+q(',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h]
+
+# Quand True (variable d'env DEMO_MODE=True), les transactions soumises par les
+# visiteurs sont analysées et affichées mais jamais enregistrées : la démo
+# publique reste consultable sans que personne ne puisse modifier les données.
+DEMO_MODE = os.environ.get('DEMO_MODE', 'False') == 'True'
 
 
 # Application definition
@@ -32,6 +40,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -106,6 +115,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 ##### Emplacement du modele de Machine 
 ML_MODEL_PATH = BASE_DIR / 'ml_model' / 'fraud_model.pkl'

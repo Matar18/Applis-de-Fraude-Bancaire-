@@ -1,0 +1,2 @@
+release: python manage.py migrate
+web: gunicorn APP_Fraud.wsgi --log-file -
